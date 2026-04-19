@@ -1,0 +1,11 @@
+[
+  {
+    "id": "msg1",
+    "itemId": "1",
+    "senderId": "user2",
+    "senderName": "ToyTrader",
+    "content": "Is this comic still available?",
+    "type": "text",
+    "timestamp": "2026-04-12T10:56:02.346Z"
+  }
+]

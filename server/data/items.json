@@ -1,0 +1,67 @@
+[
+  {
+    "id": "1",
+    "name": "Vintage Comic Book - Spider-Man #1",
+    "description": "Rare collectible comic in mint condition, never opened",
+    "price": 500,
+    "image": "https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?w=400",
+    "sellerId": "user1",
+    "sellerName": "ComicCollector",
+    "status": "active",
+    "highestOffer": null,
+    "highestOfferBuyer": null,
+    "createdAt": "2026-04-18T17:22:19.110Z"
+  },
+  {
+    "id": "2",
+    "name": "Limited Edition Funko Pop - Batman",
+    "description": "Rare convention exclusive, still in original box",
+    "price": 150,
+    "image": "https://images.unsplash.com/photo-1581235725079-7c7783e6a2df?w=400",
+    "sellerId": "user2",
+    "sellerName": "ToyTrader",
+    "status": "active",
+    "highestOffer": null,
+    "highestOfferBuyer": null,
+    "createdAt": "2026-04-18T17:22:19.113Z"
+  },
+  {
+    "id": "3",
+    "name": "Pokemon Card - Charizard Holo",
+    "description": "First edition, graded PSA 9, extremely rare",
+    "price": 1200,
+    "image": "https://images.unsplash.com/photo-1621274403997-37aace184f49?w=400",
+    "sellerId": "user3",
+    "sellerName": "CardMaster",
+    "status": "active",
+    "highestOffer": null,
+    "highestOfferBuyer": null,
+    "createdAt": "2026-04-18T17:22:19.113Z"
+  },
+  {
+    "id": "4",
+    "name": "Star Wars Action Figure - Darth Vader",
+    "description": "1977 original, still in packaging",
+    "price": 850,
+    "image": "https://images.unsplash.com/photo-1608889476561-6242cfdbf4f2?w=400",
+    "sellerId": "user1",
+    "sellerName": "ComicCollector",
+    "status": "active",
+    "highestOffer": null,
+    "highestOfferBuyer": null,
+    "createdAt": "2026-04-18T17:22:19.113Z"
+  },
+  {
+    "id": "5",
+    "name": "Magic: The Gathering - Black Lotus",
+    "description": "Limited edition, near mint condition",
+    "price": 3000,
+    "image": "https://images.unsplash.com/photo-1616901826816-7045fc2e8a8d?w=400",
+    "sellerId": "user2",
+    "sellerName": "ToyTrader",
+    "status": "active",
+    "highestOffer": null,
+    "highestOfferBuyer": null,
+    "createdAt": "2026-04-18T17:22:19.113Z"
+  }
+]
