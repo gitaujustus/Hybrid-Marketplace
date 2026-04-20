@@ -50,6 +50,27 @@ app.get('/items/:id', (req, res) => res.render('item-detail', { itemId: req.para
 app.get('/messages', (req, res) => res.render('messages'));
 
 //  API Routes─
+let dbReadyPromise = null;
+const ensureDbConnection = async () => {
+  if (!dbReadyPromise) {
+    dbReadyPromise = connectToDatabase().catch((error) => {
+      dbReadyPromise = null;
+      throw error;
+    });
+  }
+  return dbReadyPromise;
+};
+
+app.use('/api', async (req, res, next) => {
+  try {
+    await ensureDbConnection();
+    next();
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    res.status(500).json({ error: 'Database connection failed' });
+  }
+});
+
 app.use('/api/items', itemsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/messages', messagesRouter);
@@ -65,18 +86,19 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-//  Start Server
-const startServer = async () => {
-  await connectToDatabase();
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-};
+//  Start local server only (Vercel handles serverless runtime)
+if (!process.env.VERCEL) {
+  const startServer = async () => {
+    await ensureDbConnection();
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  };
 
-startServer().catch((error) => {
-  console.error('Failed to start server:', error);
-  process.exit(1);
-});
+  startServer().catch((error) => {
+    console.error('Failed to start server:', error);
+  });
+}
 
 
 export default app;

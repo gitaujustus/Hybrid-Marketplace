@@ -35,13 +35,19 @@ router.get('/', async (req, res) => {
   try {
     const itemsCollection = getCollection(collections.items);
     const { search } = req.query;
-    const query = { status: 'active' };
+    const query = {
+      $or: [{ status: 'active' }, { status: { $exists: false } }]
+    };
 
     if (search?.trim()) {
       const safeSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      query.$or = [
-        { name: { $regex: safeSearch, $options: 'i' } },
-        { description: { $regex: safeSearch, $options: 'i' } }
+      query.$and = [
+        {
+          $or: [
+            { name: { $regex: safeSearch, $options: 'i' } },
+            { description: { $regex: safeSearch, $options: 'i' } }
+          ]
+        }
       ];
     }
 
