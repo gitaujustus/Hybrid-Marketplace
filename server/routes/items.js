@@ -25,6 +25,19 @@ const readMessages = () => {
   return JSON.parse(data);
 };
 
+// Get all items for a specific seller (used for "My Listings")
+router.get('/user/:sellerId', (req, res) => {
+  try {
+    const items = readItems()
+      .filter(item => item.sellerId === req.params.sellerId)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    res.json(items);
+  } catch (error) {
+    console.error('Error fetching user items:', error);
+    res.status(500).json({ error: 'Failed to fetch user items' });
+  }
+});
+
 // Get all active items (with search)
 router.get('/', (req, res) => {
   try {

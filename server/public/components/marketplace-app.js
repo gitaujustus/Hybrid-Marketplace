@@ -17,6 +17,11 @@ class MarketplaceApp extends LitElement {
     this.selectedItem = null;
   }
 
+  _formatPrice(price) {
+    const value = Number(price) || 0;
+    return `KSh ${value.toLocaleString()}`;
+  }
+
   createRenderRoot() {
     return this;
   }
@@ -59,7 +64,7 @@ class MarketplaceApp extends LitElement {
 
   async _onCheckout(e) {
     const item = e.detail.item;
-    const confirmPurchase = confirm(`Proceed to checkout for ${item.name} at $${item.price}?`);
+    const confirmPurchase = confirm(`Proceed to checkout for ${item.name} at ${this._formatPrice(item.price)}?`);
     
     if (confirmPurchase) {
       try {

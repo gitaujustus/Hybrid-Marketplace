@@ -10,6 +10,11 @@ class ItemCard extends LitElement {
     return this;
   }
 
+  _formatPrice(price) {
+    const value = Number(price) || 0;
+    return `KSh ${value.toLocaleString()}`;
+  }
+
   _handleNegotiate() {
     // We send a "bubble" event so the parent marketplace-app can catch it
     this.dispatchEvent(new CustomEvent('open-chat', {
@@ -44,7 +49,7 @@ class ItemCard extends LitElement {
           <div class="flex items-start justify-between">
             <h3 class="text-sm font-semibold text-slate-900">${this.item.name}</h3>
             <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
-              $${this.item.price}
+              ${this._formatPrice(this.item.price)}
             </span>
           </div>
           

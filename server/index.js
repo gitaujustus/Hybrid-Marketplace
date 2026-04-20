@@ -46,6 +46,9 @@ app.get('/', (req, res) => {
 // Authentication page
 app.get('/login', (req, res) => res.render('login'));
 app.get('/signup', (req, res) => res.render('signup'));
+// User's listings page
+app.get('/my-listings', (req, res) => res.render('mylistings'));
+app.get('/add-listing', (req, res) => res.render('add-listing'));
 
 //  API Routes─
 app.use('/api/items', itemsRouter);

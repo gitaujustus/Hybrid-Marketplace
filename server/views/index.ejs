@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/styles/style.css" />
     <script type="module" src="/components/marketplace-app.js"></script>
+    <script type="module" src="/components/marketplace-app.js"></script>
+    <script type="module" src="/utils/auth.js"></script>
 </head>
 <body class="bg-gray-50 text-slate-900 antialiased font-sans">
 
@@ -19,13 +21,13 @@
                         <div class="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center">
                             <span class="text-white font-bold text-xl">I</span>
                         </div>
-                        <span class="text-xl font-bold tracking-tight text-slate-900">InterIntel</span>
+                        <span class=" hidden sm:flex text-xl font-bold tracking-tight text-slate-900">InterIntel</span>
                     </div>
                     
-                    <nav class="hidden md:flex items-center gap-8">
-                        <a href="/" class="text-sm font-medium text-indigo-600">Marketplace</a>
+                    <nav id="navLinks" class="flex items-center gap-2 sm:gap-4 md:gap-8">
+                        <!-- <a href="/" class="text-sm font-medium text-indigo-600">Marketplace</a>
                         <a href="#" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">My Listings</a>
-                        <a href="#" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">Messages</a>
+                        <a href="#" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">Messages</a> -->
                     </nav>
 
                     <div class="flex items-center gap-4" id="authSection">
@@ -53,9 +55,10 @@
     </div>
 
 
-   <script>
+   <!-- <script>
     function updateAuthSection() {
         const authSection = document.getElementById('authSection');
+        const navLinks = document.getElementById('navLinks');
         let user = null;
         try {
             const userData = localStorage.getItem('user');
@@ -77,6 +80,11 @@
                     </svg>
                 </button>
             `;
+            navLinks.innerHTML = `
+                <a href="/" class="text-sm font-medium text-indigo-600">Marketplace</a>
+                <a href="/my-listings" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">My Listings</a>
+                <a href="#" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">Messages</a>
+            `;
             document.getElementById('logoutBtn').addEventListener('click', () => {
                 localStorage.removeItem('user');
                 location.reload();
@@ -87,6 +95,10 @@
                 <a href="/login" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">Login</a>
                 <a href="/signup" class="rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition">Sign Up</a>
             `;
+            navLinks.innerHTML = `
+                <a href="/" class="text-sm font-medium text-indigo-600">Marketplace</a>
+                <a href="#" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">Messages</a>
+            `;
         }
     }
 
@@ -95,6 +107,13 @@
 
     // Listen for storage changes (in case login happens in another tab)
     window.addEventListener('storage', updateAuthSection);
+</script> -->
+
+<script type="module">
+        import { getUser, updateAuthSection, updateNav } from '/utils/auth.js';
+        const user = getUser();
+        updateNav(!!user);
+        updateAuthSection(!!user);
 </script>
 
 </body>

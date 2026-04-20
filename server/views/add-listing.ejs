@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Listing | InterIntel Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles/style.css" />
+</head>
+<body class="bg-gray-50 text-slate-900 antialiased font-sans">
+    <div class="min-h-screen flex items-center justify-center px-4 py-10">
+        <div class="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-slate-900">Add a New Listing</h1>
+                <p class="mt-1 text-sm text-slate-600">Fill in your item details to publish your listing.</p>
+            </div>
+
+            <form id="addListingForm" class="space-y-5">
+                <div>
+                    <label for="name" class="mb-1 block text-sm font-medium text-slate-700">Item name</label>
+                    <input
+                        id="name"
+                        name="name"
+                        type="text"
+                        required
+                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                        placeholder="e.g. Vintage Comic Book - Spider-Man #1"
+                    />
+                </div>
+
+                <div>
+                    <label for="description" class="mb-1 block text-sm font-medium text-slate-700">Description</label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows="4"
+                        required
+                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                        placeholder="Describe condition, rarity, and details..."
+                    ></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="price" class="mb-1 block text-sm font-medium text-slate-700">Price (KSh)</label>
+                        <input
+                            id="price"
+                            name="price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            required
+                            class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                            placeholder="e.g. 15000"
+                        />
+                    </div>
+                    <div>
+                        <label for="image" class="mb-1 block text-sm font-medium text-slate-700">Image URL (optional)</label>
+                        <input
+                            id="image"
+                            name="image"
+                            type="url"
+                            class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                            placeholder="https://example.com/item.jpg"
+                        />
+                    </div>
+                </div>
+
+                <p id="errorMsg" class="hidden rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"></p>
+
+                <div class="flex items-center gap-3 pt-2">
+                    <button
+                        type="submit"
+                        class="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition"
+                    >
+                        Publish Listing
+                    </button>
+                    <a
+                        href="/my-listings"
+                        class="rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                    >
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getUser } from '/utils/auth.js';
+
+        const form = document.getElementById('addListingForm');
+        const errorMsg = document.getElementById('errorMsg');
+        const user = getUser();
+
+        if (!user) {
+            window.location.href = '/login';
+        }
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            errorMsg.classList.add('hidden');
+            errorMsg.textContent = '';
+
+            const formData = new FormData(form);
+            const name = String(formData.get('name') || '').trim();
+            const description = String(formData.get('description') || '').trim();
+            const price = String(formData.get('price') || '').trim();
+            const image = String(formData.get('image') || '').trim();
+
+            try {
+                const response = await fetch('/api/items', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        description,
+                        price,
+                        image,
+                        sellerId: user.id,
+                        sellerName: user.name
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to create listing');
+                }
+
+                window.location.href = '/my-listings';
+            } catch (error) {
+                errorMsg.textContent = error.message || 'Something went wrong. Please try again.';
+                errorMsg.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
