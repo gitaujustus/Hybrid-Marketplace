@@ -28,13 +28,8 @@
                         <a href="#" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">Messages</a>
                     </nav>
 
-                    <div class="flex items-center gap-4">
-                        <button class="rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </button>
-                        <div class="h-8 w-8 rounded-full bg-indigo-100 border border-indigo-200"></div>
+                    <div class="flex items-center gap-4" id="authSection">
+                        <!-- Auth buttons will be inserted here by JavaScript -->
                     </div>
                 </div>
             </div>
@@ -47,12 +42,7 @@
                 <p class="mt-3 text-lg text-slate-600">Find, negotiate, and trade unique collectibles with a global community.</p>
             </section>
 
-            <!-- <marketplace-app id="app-root">
-                <div class="flex items-center justify-center py-20">
-                    <div class="animate-pulse text-slate-400">Loading marketplace...</div>
-                </div>
-            </marketplace-app> -->
-<marketplace-app></marketplace-app>
+            <marketplace-app></marketplace-app>
         </main>
 
         <footer class="border-t border-gray-200 bg-white py-8">
@@ -62,39 +52,50 @@
         </footer>
     </div>
 
+
+   <script>
+    function updateAuthSection() {
+        const authSection = document.getElementById('authSection');
+        let user = null;
+        try {
+            const userData = localStorage.getItem('user');
+            if (userData && userData !== 'undefined' && userData !== 'null') {
+                user = JSON.parse(userData);
+            }
+        } catch (error) {
+            console.error('Error parsing user data:', error);
+            localStorage.removeItem('user'); // Clear corrupted data
+        }
+
+        if (user) {
+            // Logged in: Show profile and logout
+            authSection.innerHTML = `
+                <span class="text-sm text-slate-700">Welcome, ${user.name}!</span>
+                <button id="logoutBtn" class="rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </button>
+            `;
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                localStorage.removeItem('user');
+                location.reload();
+            });
+        } else {
+            // Not logged in: Show login and signup buttons
+            authSection.innerHTML = `
+                <a href="/login" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">Login</a>
+                <a href="/signup" class="rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition">Sign Up</a>
+            `;
+        }
+    }
+
+    // Update on page load
+    updateAuthSection();
+
+    // Listen for storage changes (in case login happens in another tab)
+    window.addEventListener('storage', updateAuthSection);
+</script>
+
 </body>
 </html>
-
-
-<!-- <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Collectible Trading Posttt</title>
-    <link rel="stylesheet" href="/styles/style.css" />
-  </head>
-  <body class="bg-yellow-200 text-slate-900 antialiased">
-    <div class="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-7xl">
-        <header class="mb-8 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p class="text-sm uppercase tracking-[0.3em] text-red-500">✅ UPDATES WORKING!</p>
-            <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900"> Test 123</h1>
-            <p class="mt-2 max-w-2xl text-sm text-slate-500">If you see this, the EJS caching is FIXED!!!</p>
-          </div>
-          <div class="flex flex-col gap-2 sm:items-end">
-            <p class="text-sm text-red-600">Built with EJS + Lit +</p>
-            <p class="rounded-full bg-slate-100 px-4 py-2  text-xs uppercase tracking-[0.24em] text-slate-600">Server-rendered shell</p>
-          </div>
-        </header> 
-
-        <main>
-          <item-list></item-list>
-        </main>
-      </div>
-    </div>
-
-    <script type="module" src="/components/item-list.js"></script>
-  </body>
-</html> -->

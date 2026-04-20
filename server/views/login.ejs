@@ -43,33 +43,37 @@
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('errorMsg');
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const errorMsg = document.getElementById('errorMsg');
 
-            try {
-                const response = await fetch('/api/users/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: username, password })
-                });
+        try {
+            const response = await fetch('/api/users/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: username, password })
+            });
 
-                const data = await response.json();
+            const data = await response.json();
+            console.log('Login response status:', response.status);
+            console.log('Login response data:', data);
 
-                if (response.ok) {
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = '/';
-                } else {
-                    errorMsg.textContent = data.error || 'Login failed';
-                    errorMsg.classList.remove('hidden');
-                }
-            } catch (error) {
-                errorMsg.textContent = 'An error occurred. Please try again.';
+            if (response.ok) {
+                console.log('Setting user in localStorage:', data);
+                localStorage.setItem('user', JSON.stringify(data));
+                window.location.href = '/';
+            } else {
+                errorMsg.textContent = data.error || 'Login failed';
                 errorMsg.classList.remove('hidden');
             }
-        });
-    </script>
+        } catch (error) {
+            console.error('Login fetch error:', error);
+            errorMsg.textContent = 'An error occurred. Please try again.';
+            errorMsg.classList.remove('hidden');
+        }
+    });
+</script>
 </body>
 </html>
