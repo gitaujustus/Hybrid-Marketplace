@@ -26,6 +26,13 @@ const hashPassword = (password) => {
   return crypto.createHash('sha256').update(password).digest('hex');
 };
 
+const verifyPassword = (storedPassword, providedPassword) => {
+  if (!storedPassword) return false;
+  const hashedProvided = hashPassword(providedPassword);
+  // Support both hashed and legacy plaintext passwords.
+  return storedPassword === hashedProvided || storedPassword === providedPassword;
+};
+
 // Login user
 router.post('/login', (req, res) => {
   try {
@@ -40,7 +47,6 @@ router.post('/login', (req, res) => {
     }
     
     const users = readUsers();
-    const hashedPassword = hashPassword(password);
     let user = users.find(u => u.name.toLowerCase() === name.trim().toLowerCase());
     
     if (!user) {
@@ -48,13 +54,18 @@ router.post('/login', (req, res) => {
     }
 
     // Verify password for existing user
-    if (user.password !== hashedPassword) {
+    if (!verifyPassword(user.password, password)) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
-    // Update last login
+    // Update last login. In production/serverless this can be read-only,
+    // so login should still succeed even if persistence fails.
     user.lastLogin = new Date().toISOString();
-    writeUsers(users);
+    try {
+      writeUsers(users);
+    } catch (writeError) {
+      console.warn('Could not persist lastLogin:', writeError.message);
+    }
 
     // Return user without password
     const { password: _, ...userWithoutPassword } = user;
