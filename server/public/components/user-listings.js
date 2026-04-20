@@ -1,20 +1,32 @@
+
 import { LitElement, html } from 'https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js';
 import { getUser } from '/utils/auth.js';
+import './item-chat-modal.js';
 
 class UserListings extends LitElement {
   static properties = {
     items: { type: Array },
+    conversations: { type: Array },
     loading: { type: Boolean },
     error: { type: String },
-    user: { type: Object }
+    user: { type: Object },
+    chatOpen: { type: Boolean },
+    selectedItem: { type: Object },
+    chatOtherUserId: { type: String },
+    chatOtherUserName: { type: String }
   };
 
   constructor() {
     super();
     this.items = [];
+    this.conversations = [];
     this.loading = true;
     this.error = '';
     this.user = null;
+    this.chatOpen = false;
+    this.selectedItem = null;
+    this.chatOtherUserId = '';
+    this.chatOtherUserName = '';
   }
 
   createRenderRoot() {
@@ -30,6 +42,7 @@ class UserListings extends LitElement {
     super.connectedCallback();
     this.user = getUser();
     this._fetchMyListings();
+    this._fetchConversations();
   }
 
   async _fetchMyListings() {
@@ -44,6 +57,7 @@ class UserListings extends LitElement {
       const res = await fetch(`/api/items/user/${encodeURIComponent(this.user.id)}`);
       if (!res.ok) throw new Error(`Failed to load listings (${res.status})`);
       this.items = await res.json();
+      await this._fetchConversations();
     } catch (e) {
       console.error('Error fetching user listings:', e);
       this.error = e?.message || 'Failed to load your listings';
@@ -64,6 +78,39 @@ class UserListings extends LitElement {
       console.error('Error deleting listing:', e);
       alert(e?.message || 'Failed to delete listing');
     }
+  }
+
+  async _fetchConversations() {
+    if (!this.user?.id) return;
+    try {
+      const res = await fetch(`/api/messages/conversations/${encodeURIComponent(this.user.id)}`);
+      if (!res.ok) throw new Error('Failed to load conversations');
+      const data = await res.json();
+      this.conversations = data.filter(conv => this.items.some(item => item.id === conv.itemId));
+    } catch (e) {
+      console.error('Error fetching conversations:', e);
+      this.conversations = [];
+    }
+  }
+
+  _openConversation(conversation) {
+    const item = this.items.find(entry => entry.id === conversation.itemId);
+    if (!item) return;
+    this.selectedItem = item;
+    this.chatOtherUserId = conversation.otherUserId;
+    this.chatOtherUserName = conversation.otherUserName || 'Buyer';
+    this.chatOpen = true;
+  }
+
+  _closeChat() {
+    this.chatOpen = false;
+  }
+
+  _conversationSnippet(conversation) {
+    const last = conversation.lastMessage;
+    if (!last) return 'No messages yet';
+    if (last.type === 'offer') return `Offer: ${this._formatPrice(last.offerAmount)}`;
+    return last.content || 'Message';
   }
 
   render() {
@@ -138,9 +185,15 @@ class UserListings extends LitElement {
                       <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
                         ${this._formatPrice(item.price)}
                       </span>
+                      <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
+                        ${item.status}
+                      </span>
                     </div>
                     <p class="mt-1 text-xs text-slate-600 line-clamp-2">${item.description}</p>
                     <p class="mt-1 text-xs text-slate-400">Created: ${new Date(item.createdAt).toLocaleString()}</p>
+                    <a href="/items/${item.id}" class="mt-2 inline-flex text-xs font-semibold text-indigo-600 hover:text-indigo-700">
+                      View full details
+                    </a>
                   </div>
                 </div>
                 <div class="flex gap-2 sm:shrink-0">
@@ -155,6 +208,35 @@ class UserListings extends LitElement {
             `)
         }
       </div>
+
+      <section class="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
+        <h3 class="text-lg font-semibold text-slate-900">Buyer Inbox</h3>
+        <p class="mt-1 text-sm text-slate-600">See who contacted you and open the product chat directly.</p>
+
+        <div class="mt-4 space-y-3">
+          ${this.conversations.length === 0
+            ? html`<p class="text-sm text-slate-500">No buyer conversations yet.</p>`
+            : this.conversations.map(conversation => html`
+                <button
+                  @click=${() => window.location.href = `/items/${conversation.itemId}`}
+                  class="w-full rounded-xl border border-slate-200 p-3 text-left hover:bg-slate-50 transition"
+                >
+                  <div class="flex items-center justify-between gap-3">
+                    <div>
+                      <p class="text-sm font-semibold text-slate-900">${conversation.itemName}</p>
+                      <p class="mt-1 text-xs text-slate-600">${conversation.otherUserName} - ${this._conversationSnippet(conversation)}</p>
+                    </div>
+                    <div class="text-right">
+                      ${conversation.unreadCount > 0
+                        ? html`<span class="rounded-full bg-indigo-600 px-2 py-1 text-xs font-semibold text-white">${conversation.unreadCount}</span>`
+                        : ''}
+                      <p class="mt-1 text-xs text-slate-400">${new Date(conversation.lastMessage.timestamp).toLocaleString()}</p>
+                    </div>
+                  </div>
+                </button>
+              `)}
+        </div>
+      </section>
     `;
   }
 }

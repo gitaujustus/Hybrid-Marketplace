@@ -29,6 +29,13 @@
     "name": "Justus",
     "password": "5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5",
     "createdAt": "2026-04-19T19:31:58.432Z",
-    "lastLogin": "2026-04-20T05:56:52.558Z"
+    "lastLogin": "2026-04-20T10:11:50.794Z"
+  },
+  {
+    "id": "c7b590f5-32f4-41ad-b0a1-10be2feab92b",
+    "name": "John",
+    "password": "20f3765880a5c269b747e1e906054a4b4a3a991259f1e16b5dde4742cec2319a",
+    "createdAt": "2026-04-20T07:11:25.002Z",
+    "lastLogin": "2026-04-20T07:11:51.444Z"
   }
 ]

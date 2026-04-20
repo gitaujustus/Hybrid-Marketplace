@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js';
+import { LitElement, html } from 'https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js';
 
 class ItemCard extends LitElement {
   static properties = {
@@ -15,23 +15,6 @@ class ItemCard extends LitElement {
     return `KSh ${value.toLocaleString()}`;
   }
 
-  _handleNegotiate() {
-    // We send a "bubble" event so the parent marketplace-app can catch it
-    this.dispatchEvent(new CustomEvent('open-chat', {
-      detail: { item: this.item }, // Pass the specific item data
-      bubbles: true,
-      composed: true
-    }));
-  }
-
-  _handleCheckout() {
-    this.dispatchEvent(new CustomEvent('checkout-item', {
-      detail: { item: this.item },
-      bubbles: true,
-      composed: true
-    }));
-  }
-  
   render() {
     if (!this.item) return html``;
 
@@ -57,10 +40,10 @@ class ItemCard extends LitElement {
 
           <div class="mt-4 flex flex-col gap-2">
             <button 
-              @click="${this._handleNegotiate}"
+              @click="${this._handleReadMore}"
               class="w-full rounded-lg bg-indigo-600 px-3 py-2 text-center text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 transition"
             >
-              Negotiate Price
+              Read More
             </button>
             <button 
               @click="${this._handleCheckout}"
@@ -74,8 +57,8 @@ class ItemCard extends LitElement {
     `;
   }
 
-  _handleNegotiate() {
-    this.dispatchEvent(new CustomEvent('open-chat', {
+  _handleReadMore() {
+    this.dispatchEvent(new CustomEvent('open-item', {
       detail: { item: this.item },
       bubbles: true,
       composed: true
@@ -83,7 +66,11 @@ class ItemCard extends LitElement {
   }
 
   _handleCheckout() {
-    console.log('Checkout for:', this.item.name);
+    this.dispatchEvent(new CustomEvent('checkout-item', {
+      detail: { item: this.item },
+      bubbles: true,
+      composed: true
+    }));
   }
 }
 

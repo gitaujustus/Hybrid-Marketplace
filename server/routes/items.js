@@ -25,6 +25,17 @@ const readMessages = () => {
   return JSON.parse(data);
 };
 
+const normalizeMpesaNumber = (rawPhone) => {
+  const digits = String(rawPhone || '').replace(/\D/g, '');
+  if (/^07\d{8}$/.test(digits) || /^01\d{8}$/.test(digits)) {
+    return `254${digits.slice(1)}`;
+  }
+  if (/^254(7|1)\d{8}$/.test(digits)) {
+    return digits;
+  }
+  return null;
+};
+
 // Get all items for a specific seller (used for "My Listings")
 router.get('/user/:sellerId', (req, res) => {
   try {
@@ -146,20 +157,48 @@ router.delete('/:id', (req, res) => {
 // Checkout - buyer confirms payment
 router.post('/:id/checkout', (req, res) => {
   try {
+    const { buyerId, mpesaNumber, amount } = req.body || {};
+    if (!buyerId) {
+      return res.status(400).json({ error: 'buyerId is required' });
+    }
+
+    const normalizedMpesa = normalizeMpesaNumber(mpesaNumber);
+    if (!normalizedMpesa) {
+      return res.status(400).json({ error: 'Valid M-Pesa number is required' });
+    }
+
     const items = readItems();
     const index = items.findIndex(i => i.id === req.params.id);
     if (index === -1) {
       return res.status(404).json({ error: 'Item not found' });
     }
-    
+
+    const item = items[index];
+    if (item.sellerId === buyerId) {
+      return res.status(400).json({ error: 'Seller cannot pay for own listing' });
+    }
+
+    const expectedAmount =
+      item.acceptedOffer && item.acceptedBuyerId === buyerId
+        ? Number(item.acceptedOffer)
+        : Number(item.price);
+    const paidAmount = Number(amount);
+    if (!paidAmount || paidAmount !== expectedAmount) {
+      return res.status(400).json({
+        error: `Payment amount must be ${expectedAmount} for this transaction`
+      });
+    }
+
     items[index].paymentStatus = 'paid';
-    items[index].paymentConfirmedBy = req.body.buyerId;
+    items[index].paymentConfirmedBy = buyerId;
     items[index].paymentConfirmedAt = new Date().toISOString();
+    items[index].paymentAmount = paidAmount;
+    items[index].paymentMpesaNumber = normalizedMpesa;
     writeItems(items);
     
     res.json({ 
       success: true, 
-      message: 'Payment confirmed, awaiting seller confirmation',
+      message: 'Payment confirmed successfully',
       item: items[index]
     });
   } catch (error) {

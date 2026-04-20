@@ -1,11 +1,68 @@
 [
   {
-    "id": "msg1",
+    "id": "fe58e6c1-1a98-4798-a45d-015e14ae3dff",
+    "threadId": "1:c7b590f5-32f4-41ad-b0a1-10be2feab92b:eb089d68-80c4-4101-a872-62ea26c62adb",
     "itemId": "1",
-    "senderId": "user2",
-    "senderName": "ToyTrader",
-    "content": "Is this comic still available?",
+    "senderId": "eb089d68-80c4-4101-a872-62ea26c62adb",
+    "senderName": "Justus",
+    "receiverId": "c7b590f5-32f4-41ad-b0a1-10be2feab92b",
+    "content": "",
+    "type": "offer",
+    "timestamp": "2026-04-20T09:46:30.591Z",
+    "readBy": [
+      "eb089d68-80c4-4101-a872-62ea26c62adb",
+      "c7b590f5-32f4-41ad-b0a1-10be2feab92b"
+    ],
+    "offerAmount": 3000,
+    "offerStatus": "accepted",
+    "respondedAt": "2026-04-20T09:47:06.766Z",
+    "respondedBy": "c7b590f5-32f4-41ad-b0a1-10be2feab92b"
+  },
+  {
+    "id": "41d694a8-68fd-4609-aa16-812bfc1ab3c8",
+    "threadId": "1:c7b590f5-32f4-41ad-b0a1-10be2feab92b:eb089d68-80c4-4101-a872-62ea26c62adb",
+    "itemId": "1",
+    "senderId": "c7b590f5-32f4-41ad-b0a1-10be2feab92b",
+    "senderName": "John",
+    "receiverId": "eb089d68-80c4-4101-a872-62ea26c62adb",
+    "content": "hi",
     "type": "text",
-    "timestamp": "2026-04-12T10:56:02.346Z"
+    "timestamp": "2026-04-20T09:49:54.400Z",
+    "readBy": [
+      "c7b590f5-32f4-41ad-b0a1-10be2feab92b",
+      "eb089d68-80c4-4101-a872-62ea26c62adb"
+    ]
+  },
+  {
+    "id": "bf5f9b64-cf58-47ce-b055-bf461d664407",
+    "threadId": "3:c7b590f5-32f4-41ad-b0a1-10be2feab92b:eb089d68-80c4-4101-a872-62ea26c62adb",
+    "itemId": "3",
+    "senderId": "eb089d68-80c4-4101-a872-62ea26c62adb",
+    "senderName": "Justus",
+    "receiverId": "c7b590f5-32f4-41ad-b0a1-10be2feab92b",
+    "content": "",
+    "type": "offer",
+    "timestamp": "2026-04-20T10:29:21.325Z",
+    "readBy": [
+      "eb089d68-80c4-4101-a872-62ea26c62adb",
+      "c7b590f5-32f4-41ad-b0a1-10be2feab92b"
+    ],
+    "offerAmount": 4000,
+    "offerStatus": "pending"
+  },
+  {
+    "id": "363b2eb4-a840-49ec-a4dd-71df1f83c9ff",
+    "threadId": "3:c7b590f5-32f4-41ad-b0a1-10be2feab92b:eb089d68-80c4-4101-a872-62ea26c62adb",
+    "itemId": "3",
+    "senderId": "eb089d68-80c4-4101-a872-62ea26c62adb",
+    "senderName": "Justus",
+    "receiverId": "c7b590f5-32f4-41ad-b0a1-10be2feab92b",
+    "content": "heeey there",
+    "type": "text",
+    "timestamp": "2026-04-20T10:29:22.600Z",
+    "readBy": [
+      "eb089d68-80c4-4101-a872-62ea26c62adb",
+      "c7b590f5-32f4-41ad-b0a1-10be2feab92b"
+    ]
   }
 ]

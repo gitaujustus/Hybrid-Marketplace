@@ -49,6 +49,10 @@ app.get('/signup', (req, res) => res.render('signup'));
 // User's listings page
 app.get('/my-listings', (req, res) => res.render('mylistings'));
 app.get('/add-listing', (req, res) => res.render('add-listing'));
+app.get('/items/:id', (req, res) => res.render('item-detail', { itemId: req.params.id }));
+
+// Messages page
+app.get('/messages', (req, res) => res.render('messages'));
 
 //  API Routes─
 app.use('/api/items', itemsRouter);

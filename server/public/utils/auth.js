@@ -17,15 +17,14 @@ export function updateNav(isLoggedIn) {
         navLinks.innerHTML = `
             <a href="/" class="text-sm font-medium text-indigo-600">Marketplace</a>
             <a href="/my-listings" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">My Listings</a>
-            <a href="#" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">Messages</a>
         `;
     } else {
         navLinks.innerHTML = `
             <a href="/" class="text-sm font-medium text-indigo-600">Marketplace</a>
-            <a href="#" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">Messages</a>
         `;
     }
 }
+            // <a href="#" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">Messages</a>
 
 export function updateAuthSection(isLoggedIn) {
     const authSection = document.getElementById('authSection');

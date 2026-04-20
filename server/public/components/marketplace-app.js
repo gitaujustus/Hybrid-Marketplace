@@ -5,8 +5,7 @@ class MarketplaceApp extends LitElement {
   static properties = {
     items: { type: Array },
     filteredItems: { type: Array },
-    loading: { type: Boolean },
-    selectedItem: { type: Object } // Added to track which item we are chatting about
+    loading: { type: Boolean }
   };
 
   constructor() {
@@ -14,7 +13,6 @@ class MarketplaceApp extends LitElement {
     this.items = [];
     this.filteredItems = [];
     this.loading = true;
-    this.selectedItem = null;
   }
 
   _formatPrice(price) {
@@ -53,13 +51,9 @@ class MarketplaceApp extends LitElement {
     );
   }
 
-  // --- NEW HANDLERS ---
-
-  _onOpenChat(e) {
-    this.selectedItem = e.detail.item;
-    console.log("Opening chat for:", this.selectedItem.name);
-    alert(`Starting negotiation for: ${this.selectedItem.name}`);
-    // Future: Logic to show your chat component goes here
+  _onOpenItem(e) {
+    const item = e.detail.item;
+    window.location.href = `/items/${encodeURIComponent(item.id)}`;
   }
 
   async _onCheckout(e) {
@@ -111,7 +105,7 @@ class MarketplaceApp extends LitElement {
         : html`
             <div 
               class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-              @open-chat="${this._onOpenChat}"
+              @open-item="${this._onOpenItem}"
               @checkout-item="${this._onCheckout}"
             >
               ${this.filteredItems.length > 0 
@@ -127,6 +121,7 @@ class MarketplaceApp extends LitElement {
             </div>
           `
       }
+
     `;
   }
 }

@@ -5,12 +5,12 @@
     "description": "Rare collectible comic in mint condition, never opened",
     "price": 3500,
     "image": "https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?w=400",
-    "sellerId": "user1",
+    "sellerId": "c7b590f5-32f4-41ad-b0a1-10be2feab92b",
     "sellerName": "ComicCollector",
     "status": "active",
-    "highestOffer": null,
-    "highestOfferBuyer": null,
-    "createdAt": "2026-04-18T17:22:19.110Z"
+    "highestOffer": 3000,
+    "highestOfferBuyer": "eb089d68-80c4-4101-a872-62ea26c62adb",
+    "paymentMpesaNumber": "254729144533"
   },
   {
     "id": "2",
@@ -31,16 +31,19 @@
     "description": "First edition, graded PSA 9, extremely rare",
     "price": 7200,
     "image": "https://images.unsplash.com/photo-1621274403997-37aace184f49?w=400",
-    "sellerId": "user3",
+    "sellerId": "c7b590f5-32f4-41ad-b0a1-10be2feab92b",
     "sellerName": "CardMaster",
     "status": "active",
-    "highestOffer": null,
-    "highestOfferBuyer": null,
-    "createdAt": "2026-04-18T17:22:19.113Z"
+    "highestOffer": 6500,
+    "highestOfferBuyer": "eb089d68-80c4-4101-a872-62ea26c62adb",
+    "createdAt": "2026-04-18T17:22:19.113Z",
+    "acceptedOffer": 6500,
+    "acceptedBuyerId": "c7b590f5-32f4-41ad-b0a1-10be2feab92b",
+    "acceptedAt": "2026-04-20T07:58:48.700Z"
   },
   {
     "id": "4",
-    "name": "Vintage Gold Necklace", 
+    "name": "Vintage Gold Necklace",
     "description": "Elegant 14k gold necklace with intricate design, perfect for special occasions",
     "price": 8550,
     "image": "https://images.unsplash.com/photo-1631965004544-1762fc696476?q=80&w=435&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
@@ -53,7 +56,7 @@
   },
   {
     "id": "5",
-    "name": "Elegant Women's Watch",  
+    "name": "Elegant Women's Watch",
     "description": "Classic design with a leather strap, perfect for any occasion",
     "price": 3000,
     "image": "https://images.unsplash.com/photo-1657159810382-226b58af626f?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
@@ -66,7 +69,7 @@
   },
   {
     "id": "5",
-    "name": "Elegant Women's Watch",  
+    "name": "Elegant Women's Watch",
     "description": "Classic design with a leather strap, perfect for any occasion",
     "price": 3000,
     "image": "https://images.unsplash.com/photo-1657159810382-226b58af626f?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
