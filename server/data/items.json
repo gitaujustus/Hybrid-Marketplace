@@ -6,11 +6,12 @@
     "price": 3500,
     "image": "https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?w=400",
     "sellerId": "c7b590f5-32f4-41ad-b0a1-10be2feab92b",
-    "sellerName": "ComicCollector",
+    "sellerName": "John",
     "status": "active",
     "highestOffer": 3000,
     "highestOfferBuyer": "eb089d68-80c4-4101-a872-62ea26c62adb",
-    "paymentMpesaNumber": "254729144533"
+    "paymentMpesaNumber": "254729144533",
+    "createdAt": "2026-04-18T17:22:19.113Z"
   },
   {
     "id": "2",
@@ -19,7 +20,7 @@
     "price": 2500,
     "image": "https://images.unsplash.com/photo-1603787081207-362bcef7c144?q=80&w=465&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     "sellerId": "eb089d68-80c4-4101-a872-62ea26c62adb",
-    "sellerName": "ToyTrader",
+    "sellerName": "Justus",
     "status": "active",
     "highestOffer": null,
     "highestOfferBuyer": null,
@@ -32,13 +33,13 @@
     "price": 7200,
     "image": "https://images.unsplash.com/photo-1621274403997-37aace184f49?w=400",
     "sellerId": "c7b590f5-32f4-41ad-b0a1-10be2feab92b",
-    "sellerName": "CardMaster",
+    "sellerName": "John",
     "status": "active",
     "highestOffer": 6500,
     "highestOfferBuyer": "eb089d68-80c4-4101-a872-62ea26c62adb",
     "createdAt": "2026-04-18T17:22:19.113Z",
     "acceptedOffer": 6500,
-    "acceptedBuyerId": "c7b590f5-32f4-41ad-b0a1-10be2feab92b",
+    "acceptedBuyerId": "eb089d68-80c4-4101-a872-62ea26c62adb",
     "acceptedAt": "2026-04-20T07:58:48.700Z"
   },
   {
@@ -68,16 +69,16 @@
     "createdAt": "2026-04-18T17:22:19.113Z"
   },
   {
-    "id": "5",
-    "name": "Elegant Women's Watch",
-    "description": "Classic design with a leather strap, perfect for any occasion",
-    "price": 3000,
-    "image": "https://images.unsplash.com/photo-1657159810382-226b58af626f?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    "sellerId": "eb089d68-80c4-4101-a872-62ea26c62adb",
-    "sellerName": "Justus",
+    "id": "1261a848-d2f6-4716-ae2f-134c7bf6b86e",
+    "name": "Hood",
+    "description": "A white premium hoodie",
+    "price": 30000,
+    "image": "https://media.istockphoto.com/id/2155384695/photo/mockup-of-white-oversized-hoodie-with-hood-ties-sleeves-in-pocket-empty-sweatshirt-front-view.jpg?s=1024x1024&w=is&k=20&c=Zcp3aazKgI85JAtOYN6Ebld76gFEzo9B7Mwc663rEsk=",
+    "sellerId": "f393d267-de99-4209-bcf1-9d8c1b25657b",
+    "sellerName": "SAASAS",
     "status": "active",
     "highestOffer": null,
     "highestOfferBuyer": null,
-    "createdAt": "2026-04-18T17:22:19.113Z"
+    "createdAt": "2026-04-20T12:23:46.168Z"
   }
 ]

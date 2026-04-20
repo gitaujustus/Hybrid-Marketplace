@@ -26,7 +26,7 @@ const hashPassword = (password) => {
   return crypto.createHash('sha256').update(password).digest('hex');
 };
 
-// Login or register user
+// Login user
 router.post('/login', (req, res) => {
   try {
     const { name, password } = req.body;
@@ -44,31 +44,21 @@ router.post('/login', (req, res) => {
     let user = users.find(u => u.name.toLowerCase() === name.trim().toLowerCase());
     
     if (!user) {
-      // Create new user with password
-      user = {
-        id: uuidv4(),
-        name: name.trim(),
-        password: hashedPassword,
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString()
-      };
-      users.push(user);
-      writeUsers(users);
-      // Return user without password
-      const { password: _, ...userWithoutPassword } = user;
-      return res.json({ ...userWithoutPassword, isNewUser: true });
-    } else {
-      // Verify password for existing user
-      if (user.password !== hashedPassword) {
-        return res.status(401).json({ error: 'Invalid password' });
-      }
-      // Update last login
-      user.lastLogin = new Date().toISOString();
-      writeUsers(users);
-      // Return user without password
-      const { password: _, ...userWithoutPassword } = user;
-      return res.json({ ...userWithoutPassword, isNewUser: false });
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
+
+    // Verify password for existing user
+    if (user.password !== hashedPassword) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    // Update last login
+    user.lastLogin = new Date().toISOString();
+    writeUsers(users);
+
+    // Return user without password
+    const { password: _, ...userWithoutPassword } = user;
+    return res.json({ ...userWithoutPassword, isNewUser: false });
   } catch (error) {
     console.error('Error in login:', error);
     res.status(500).json({ error: 'Failed to login' });

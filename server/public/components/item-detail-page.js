@@ -252,17 +252,61 @@ class ItemDetailPage extends LitElement {
         </section>
       ` : ''}
 
-      ${this.currentUser ? (this.chatOtherUserId ? html`
-          <item-chat-modal
-            .inline=${true}
-            .open=${true}
-            .item=${this.item}
-            .currentUser=${this.currentUser}
-            .otherUserId=${this.chatOtherUserId}
-            .otherUserName=${this.chatOtherUserName}
-            @thread-updated=${() => this._loadPageData()}
-          ></item-chat-modal>
-      ` : '') : ''}
+      ${isSeller ? html`
+        <section class="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
+          <h2 class="text-lg font-semibold text-slate-900">Buyer Conversations</h2>
+          <p class="mt-1 text-sm text-slate-600">See who contacted you about this listing.</p>
+          <div class="mt-4 space-y-3">
+            ${this.conversations.length === 0
+              ? html`<p class="text-sm text-slate-500">No buyer messages for this item yet.</p>`
+              : this.conversations.map(conv => html`
+                  <button
+                    @click=${() => this._openConversation(conv)}
+                    class="w-full rounded-xl border border-slate-200 p-3 text-left hover:bg-slate-50 transition"
+                  >
+                    <div class="flex items-center justify-between gap-3">
+                      <div>
+                        <p class="text-sm font-semibold text-slate-900">${conv.otherUserName}</p>
+                        <p class="mt-1 text-xs text-slate-600">
+                          ${conv.lastMessage.type === 'offer'
+                            ? `Offer: ${this._formatPrice(conv.lastMessage.offerAmount)}`
+                            : conv.lastMessage.content || 'Message'}
+                        </p>
+                      </div>
+                      <div class="text-right">
+                        ${conv.unreadCount > 0 ? html`<span class="rounded-full bg-indigo-600 px-2 py-1 text-xs font-semibold text-white">${conv.unreadCount}</span>` : ''}
+                        <p class="mt-1 text-xs text-slate-400">${new Date(conv.lastMessage.timestamp).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </button>
+              `)}
+          </div>
+        </section>
+      ` : ''}
+
+      ${this.currentUser
+        ? this.chatOtherUserId
+          ? html`
+              <item-chat-modal
+                .inline=${true}
+                .open=${true}
+                .item=${this.item}
+                .currentUser=${this.currentUser}
+                .otherUserId=${this.chatOtherUserId}
+                .otherUserName=${this.chatOtherUserName}
+                @thread-updated=${() => this._loadPageData()}
+              ></item-chat-modal>
+            `
+          : html`
+              <section class="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
+                <p class="text-sm text-slate-500">
+                  ${isSeller
+                    ? 'Chat will appear here when a buyer sends the first message for this listing.'
+                    : 'Chat is unavailable for this listing right now. Please try again later.'}
+                </p>
+              </section>
+            `
+        : ''}
     `;
   }
 }
