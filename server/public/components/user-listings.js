@@ -118,7 +118,7 @@ class UserListings extends LitElement {
       return html`
         <div class="rounded-2xl border border-slate-200 bg-white p-6">
           <h3 class="text-lg font-semibold text-slate-900">You’re not logged in</h3>
-          <p class="mt-1 text-sm text-slate-600">Log in to view and manage your listings.</p>
+          <p class="mt-1 md:text-sm text-xs slate-600">Log in to view and manage your listings.</p>
           <div class="mt-4 flex gap-3">
             <a href="/login" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition">Login</a>
             <a href="/signup" class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">Sign up</a>
@@ -150,11 +150,11 @@ class UserListings extends LitElement {
     return html`
       <div class="flex items-center justify-between gap-4">
         <div>
-          <h3 class="text-xl font-semibold text-slate-900">Listings by ${this.user.name}</h3>
-          <p class="mt-1 text-sm text-slate-600">${this.items.length} item(s)</p>
+          <h3 class="lg:text-xl md:text-lg text-base font-semibold text-slate-900">Listings by ${this.user.name}</h3>
+          <p class="mt-1 md:text-sm text-xs text-slate-600">${this.items.length} item(s)</p>
         </div>
         <div class="flex items-center gap-2">
-          <a href="/add-listing" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition">
+          <a href="/add-listing" class="rounded-lg bg-indigo-600 md:px-4 px-2 py-2 md:text-sm text-xs font-semibold text-white hover:bg-indigo-700 transition text-nowrap">
             Add a Listing
           </a>
           <button @click=${this._fetchMyListings} class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
@@ -173,16 +173,16 @@ class UserListings extends LitElement {
             `
           : this.items.map(item => html`
               <div class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div class="flex items-center gap-4">
+                <div class="flex flex-col sm:flex-row items-start gap-4">
                   <img
                     src="${item.image || 'https://via.placeholder.com/96'}"
                     alt="${item.name}"
-                    class="h-16 w-16 rounded-xl object-cover bg-slate-100 ring-1 ring-inset ring-slate-200"
+                    class="h-32 w-32 rounded-xl object-cover bg-slate-100 ring-1 ring-inset ring-slate-200"
                   />
                   <div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                       <h4 class="text-sm font-semibold text-slate-900">${item.name}</h4>
-                      <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
+                      <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 text-nowrap">
                         ${this._formatPrice(item.price)}
                       </span>
                       <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">

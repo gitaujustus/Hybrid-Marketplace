@@ -254,7 +254,7 @@ class ItemChatModal extends LitElement {
       ? html``
       : html`<div class="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">`;
     const wrapperEnd = this.inline ? html`` : html`</div>`;
-    const messagesHeightClass = this.inline ? 'h-[40vh]' : 'h-[52vh]';
+    const messagesHeightClass = this.inline ? 'h-[30vh]' : 'h-[42vh]';
 
     return html`
       ${wrapperStart}
@@ -275,7 +275,7 @@ class ItemChatModal extends LitElement {
               : this.error
                 ? html`<p class="text-sm text-red-600">${this.error}</p>`
                 : this.messages.length === 0
-                  ? html`<p class="text-sm text-slate-500">No messages yet. Start the conversation.</p>`
+                  ? html`<p class="text-sm text-slate-500 text-center flex items-center justify-center">No messages yet. Start the conversation.</p>`
                   : html`<div class="flex flex-col gap-3">${this.messages.map(msg => this._renderMessage(msg))}</div>`}
           </div>
 
@@ -294,7 +294,7 @@ class ItemChatModal extends LitElement {
                 placeholder="Negotiate price amount (KSh)"
                 class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               />
-              <button @click=${this._sendOffer} class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+              <button @click=${this._sendOffer} class="rounded-lg border border-slate-200 bg-white md:px-4 px-2 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                 Negotiate Price
               </button>
             </div>

@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/styles/style.css" />
     <script type="module" src="/components/marketplace-app.js"></script>
-    <script type="module" src="/components/marketplace-app.js"></script>
     <script type="module" src="/utils/auth.js"></script>
 </head>
 <body class="bg-gray-50 text-slate-900 antialiased font-sans">
@@ -18,18 +17,16 @@
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="flex h-16 items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <div class="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+                        <div class=" h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center">
                             <span class="text-white font-bold text-xl">I</span>
                         </div>
                         <span class=" hidden sm:flex text-xl font-bold tracking-tight text-slate-900">InterIntel</span>
                     </div>
                     
-                    <nav id="navLinks" class="flex items-center gap-2 sm:gap-4 md:gap-8">
-                        <!-- Links will be inserted here by JavaScript -->
+                    <nav id="navLinks" class="flex flex-col sm:flex-row justify-start sm:justify-center items-start sm:items-center gap-1 sm:gap-4 md:gap-8">
                     </nav>
 
-                    <div class="flex items-center gap-4" id="authSection">
-                        <!-- Auth buttons will be inserted here by JavaScript -->
+                    <div class="flex items-center gap-[10px] md:gap-4 " id="authSection">
                     </div>
                 </div>
             </div>
@@ -47,65 +44,11 @@
 
         <footer class="border-t border-gray-200 bg-white py-8">
             <div class="mx-auto max-w-7xl px-4 text-center text-sm text-slate-500">
-                &copy; 2026 InterIntel Engineering Challenge. Built with EJS & Lit.
+               &copy; 2026 InterIntel Engineering Technical Challenge.
             </div>
         </footer>
     </div>
 
-
-   <!-- <script>
-    function updateAuthSection() {
-        const authSection = document.getElementById('authSection');
-        const navLinks = document.getElementById('navLinks');
-        let user = null;
-        try {
-            const userData = localStorage.getItem('user');
-            if (userData && userData !== 'undefined' && userData !== 'null') {
-                user = JSON.parse(userData);
-            }
-        } catch (error) {
-            console.error('Error parsing user data:', error);
-            localStorage.removeItem('user'); // Clear corrupted data
-        }
-
-        if (user) {
-            // Logged in: Show profile and logout
-            authSection.innerHTML = `
-                <span class="text-sm text-slate-700">Welcome, ${user.name}!</span>
-                <button id="logoutBtn" class="rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                </button>
-            `;
-            navLinks.innerHTML = `
-                <a href="/" class="text-sm font-medium text-indigo-600">Marketplace</a>
-                <a href="/my-listings" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">My Listings</a>
-                <a href="#" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">Messages</a>
-            `;
-            document.getElementById('logoutBtn').addEventListener('click', () => {
-                localStorage.removeItem('user');
-                location.reload();
-            });
-        } else {
-            // Not logged in: Show login and signup buttons
-            authSection.innerHTML = `
-                <a href="/login" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">Login</a>
-                <a href="/signup" class="rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition">Sign Up</a>
-            `;
-            navLinks.innerHTML = `
-                <a href="/" class="text-sm font-medium text-indigo-600">Marketplace</a>
-                <a href="#" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition">Messages</a>
-            `;
-        }
-    }
-
-    // Update on page load
-    updateAuthSection();
-
-    // Listen for storage changes (in case login happens in another tab)
-    window.addEventListener('storage', updateAuthSection);
-</script> -->
 
 <script type="module">
         import { getUser, updateAuthSection, updateNav } from '/utils/auth.js';

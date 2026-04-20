@@ -5,7 +5,6 @@ class ItemCard extends LitElement {
     item: { type: Object }
   };
 
-  // Disable Shadow DOM to use global Tailwind CSS styles from the EJS shell
   createRenderRoot() {
     return this;
   }
@@ -29,7 +28,7 @@ class ItemCard extends LitElement {
         </div>
 
         <div class="flex flex-1 flex-col p-4">
-          <div class="flex items-start justify-between">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <h3 class="text-sm font-semibold text-slate-900">${this.item.name}</h3>
             <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
               ${this._formatPrice(this.item.price)}
@@ -75,32 +74,3 @@ class ItemCard extends LitElement {
 }
 
 customElements.define('item-card', ItemCard);
-
-
-// import { LitElement, html, css } from 'https://cdn.jsdelivr.net/npm/lit@3.3.2/lit-all.min.js';
-
-// export class ItemCard extends LitElement {
-//   static properties = {
-//     item: { type: Object }
-//   };
-
-//   static styles = css`
-//     :host {
-//       display: block;
-//       border: 1px solid #ddd;
-//       padding: 1rem;
-//       margin: 0.5rem 0;
-//       background: #f9f9f9;
-//     }
-//   `;
-
-//   render() {
-//     return html`
-//       <h3>${this.item.name}</h3>
-//       <p>${this.item.description}</p>
-//       <p>Price: $${this.item.price}</p>
-//     `;
-//   }
-// }
-
-// customElements.define('item-card', ItemCard);
