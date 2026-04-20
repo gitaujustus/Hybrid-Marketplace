@@ -1,11 +1,13 @@
 import express from 'express';
 import cors from 'cors';
+import 'dotenv/config';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import itemsRouter from './routes/items.js';
 import usersRouter from './routes/users.js';
 import messagesRouter from './routes/messages.js';
+import { connectToDatabase } from './src/db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -23,20 +25,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(join(__dirname, 'public')));
 
-//  Data Directory Setup
+//  Data Directory Setup (for local seed files)
 const dataDir = join(__dirname, 'data');
-
-const initDataFiles = () => {
-  if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
-
-  const files = ['items.json', 'users.json', 'messages.json'];
-  files.forEach(file => {
-    const filePath = join(dataDir, file);
-    if (!existsSync(filePath)) writeFileSync(filePath, '[]');
-  });
-};
-
-initDataFiles();
+if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
+['items.json', 'users.json', 'messages.json'].forEach(file => {
+  const filePath = join(dataDir, file);
+  if (!existsSync(filePath)) writeFileSync(filePath, '[]');
+});
 
 //  Page Routes
 app.get('/', (req, res) => {
@@ -71,8 +66,16 @@ app.use((err, req, res, next) => {
 });
 
 //  Start Server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+const startServer = async () => {
+  await connectToDatabase();
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+};
+
+startServer().catch((error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
 });
 
 

@@ -1,25 +1,9 @@
-
 import express from 'express';
-import { readFileSync, writeFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { collections, getCollection, removeMongoId } from '../src/db.js';
 
 const router = express.Router();
-const usersPath = join(__dirname, '../data/users.json');
-
-const readUsers = () => {
-  const data = readFileSync(usersPath);
-  return JSON.parse(data);
-};
-
-const writeUsers = (users) => {
-  writeFileSync(usersPath, JSON.stringify(users, null, 2));
-};
 
 // Hash password
 const hashPassword = (password) => {
@@ -33,8 +17,15 @@ const verifyPassword = (storedPassword, providedPassword) => {
   return storedPassword === hashedProvided || storedPassword === providedPassword;
 };
 
+const buildUserLookupQuery = (normalizedName) => ({
+  $or: [
+    { nameLower: normalizedName },
+    { name: { $regex: `^${normalizedName}$`, $options: 'i' } }
+  ]
+});
+
 // Login user
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const { name, password } = req.body;
     
@@ -46,8 +37,9 @@ router.post('/login', (req, res) => {
       return res.status(400).json({ error: 'Password is required' });
     }
     
-    const users = readUsers();
-    let user = users.find(u => u.name.toLowerCase() === name.trim().toLowerCase());
+    const usersCollection = getCollection(collections.users);
+    const normalizedName = name.trim().toLowerCase();
+    const user = await usersCollection.findOne(buildUserLookupQuery(normalizedName));
     
     if (!user) {
       return res.status(401).json({ error: 'Invalid username or password' });
@@ -60,15 +52,19 @@ router.post('/login', (req, res) => {
 
     // Update last login. In production/serverless this can be read-only,
     // so login should still succeed even if persistence fails.
-    user.lastLogin = new Date().toISOString();
+    const lastLogin = new Date().toISOString();
     try {
-      writeUsers(users);
+      await usersCollection.updateOne(
+        { id: user.id },
+        { $set: { lastLogin } }
+      );
     } catch (writeError) {
       console.warn('Could not persist lastLogin:', writeError.message);
     }
 
     // Return user without password
-    const { password: _, ...userWithoutPassword } = user;
+    user.lastLogin = lastLogin;
+    const { password: _, nameLower: __, ...userWithoutPassword } = user;
     return res.json({ ...userWithoutPassword, isNewUser: false });
   } catch (error) {
     console.error('Error in login:', error);
@@ -77,7 +73,7 @@ router.post('/login', (req, res) => {
 });
 
 // Register new user (alternative endpoint)
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
   try {
     const { name, password } = req.body;
     
@@ -89,8 +85,9 @@ router.post('/register', (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 3 characters' });
     }
     
-    const users = readUsers();
-    const existingUser = users.find(u => u.name.toLowerCase() === name.trim().toLowerCase());
+    const usersCollection = getCollection(collections.users);
+    const normalizedName = name.trim().toLowerCase();
+    const existingUser = await usersCollection.findOne(buildUserLookupQuery(normalizedName));
     
     if (existingUser) {
       return res.status(409).json({ error: 'Username already exists' });
@@ -100,16 +97,16 @@ router.post('/register', (req, res) => {
     const newUser = {
       id: uuidv4(),
       name: name.trim(),
+      nameLower: normalizedName,
       password: hashedPassword,
       createdAt: new Date().toISOString(),
       lastLogin: new Date().toISOString()
     };
     
-    users.push(newUser);
-    writeUsers(users);
+    await usersCollection.insertOne(newUser);
     
     // Return user without password
-    const { password: _, ...userWithoutPassword } = newUser;
+    const { password: _, nameLower: __, ...userWithoutPassword } = newUser;
     res.status(201).json(userWithoutPassword);
   } catch (error) {
     console.error('Error in register:', error);
@@ -118,11 +115,12 @@ router.post('/register', (req, res) => {
 });
 
 // Get all users (without passwords)
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const users = readUsers();
-    const usersWithoutPasswords = users.map(({ password, ...user }) => user);
-    res.json(usersWithoutPasswords);
+    const usersCollection = getCollection(collections.users);
+    const users = await usersCollection.find({}).toArray();
+    const usersWithoutPasswords = users.map(({ password, nameLower, ...user }) => user);
+    res.json(usersWithoutPasswords.map(removeMongoId));
   } catch (error) {
     console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
@@ -130,15 +128,15 @@ router.get('/', (req, res) => {
 });
 
 // Get single user (without password)
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
-    const users = readUsers();
-    const user = users.find(u => u.id === req.params.id);
+    const usersCollection = getCollection(collections.users);
+    const user = await usersCollection.findOne({ id: req.params.id });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    const { password, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
+    const { password, nameLower, ...userWithoutPassword } = user;
+    res.json(removeMongoId(userWithoutPassword));
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ error: 'Failed to fetch user' });
@@ -146,23 +144,24 @@ router.get('/:id', (req, res) => {
 });
 
 // Update user password
-router.put('/:id/password', (req, res) => {
+router.put('/:id/password', async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
-    const users = readUsers();
-    const userIndex = users.findIndex(u => u.id === req.params.id);
+    const usersCollection = getCollection(collections.users);
+    const user = await usersCollection.findOne({ id: req.params.id });
     
-    if (userIndex === -1) {
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    const hashedOldPassword = hashPassword(oldPassword);
-    if (users[userIndex].password !== hashedOldPassword) {
+    if (!verifyPassword(user.password, oldPassword)) {
       return res.status(401).json({ error: 'Invalid old password' });
     }
     
-    users[userIndex].password = hashPassword(newPassword);
-    writeUsers(users);
+    await usersCollection.updateOne(
+      { id: req.params.id },
+      { $set: { password: hashPassword(newPassword) } }
+    );
     
     res.json({ success: true, message: 'Password updated successfully' });
   } catch (error) {

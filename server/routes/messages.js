@@ -1,34 +1,8 @@
 import express from 'express';
-import { readFileSync, writeFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
-
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { collections, getCollection, removeMongoId } from '../src/db.js';
 
 const router = express.Router();
-const messagesPath = join(__dirname, '../data/messages.json');
-const itemsPath = join(__dirname, '../data/items.json');
-
-const readMessages = () => {
-  const data = readFileSync(messagesPath);
-  return JSON.parse(data);
-};
-
-const writeMessages = (messages) => {
-  writeFileSync(messagesPath, JSON.stringify(messages, null, 2));
-};
-
-const readItems = () => {
-  const data = readFileSync(itemsPath);
-  return JSON.parse(data);
-};
-
-const writeItems = (items) => {
-  writeFileSync(itemsPath, JSON.stringify(items, null, 2));
-};
 
 const buildThreadId = (itemId, userA, userB) => {
   const [first, second] = [userA, userB].sort();
@@ -36,12 +10,14 @@ const buildThreadId = (itemId, userA, userB) => {
 };
 
 // Get conversation summaries for a user (inbox)
-router.get('/conversations/:userId', (req, res) => {
+router.get('/conversations/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const { itemId } = req.query;
-    const messages = readMessages().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-    const items = readItems();
+    const messagesCollection = getCollection(collections.messages);
+    const itemsCollection = getCollection(collections.items);
+    const messages = await messagesCollection.find({}).sort({ timestamp: 1 }).toArray();
+    const items = await itemsCollection.find({}).toArray();
     const itemById = new Map(items.map(item => [item.id, item]));
 
     const relevantMessages = messages.filter(msg => {
@@ -80,7 +56,7 @@ router.get('/conversations/:userId', (req, res) => {
       (a, b) => new Date(b.lastMessage.timestamp) - new Date(a.lastMessage.timestamp)
     );
 
-    res.json(conversations);
+    res.json(conversations.map(conv => removeMongoId(conv)));
   } catch (error) {
     console.error('Error fetching conversations:', error);
     res.status(500).json({ error: 'Failed to fetch conversations' });
@@ -88,7 +64,7 @@ router.get('/conversations/:userId', (req, res) => {
 });
 
 // Get thread messages for a specific item and 2 participants
-router.get('/thread', (req, res) => {
+router.get('/thread', async (req, res) => {
   try {
     const { itemId, userId, otherUserId, since } = req.query;
 
@@ -96,7 +72,7 @@ router.get('/thread', (req, res) => {
       return res.status(400).json({ error: 'itemId, userId, and otherUserId are required' });
     }
 
-    const messages = readMessages();
+    const messagesCollection = getCollection(collections.messages);
     const threadId = buildThreadId(itemId, userId, otherUserId);
     const sinceDate = since ? new Date(since) : null;
 
@@ -104,25 +80,18 @@ router.get('/thread', (req, res) => {
       return res.status(400).json({ error: 'Invalid "since" timestamp format' });
     }
 
-    const threadMessages = messages
-      .filter(msg => msg.threadId === threadId)
-      .filter(msg => !sinceDate || new Date(msg.timestamp) > sinceDate)
-      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    const query = { threadId };
+    if (sinceDate) query.timestamp = { $gt: sinceDate.toISOString() };
+    const threadMessages = await messagesCollection.find(query).sort({ timestamp: 1 }).toArray();
 
-    // Mark messages as read for the requesting user
-    let readUpdated = false;
-    messages.forEach(msg => {
-      if (msg.threadId === threadId && msg.receiverId === userId) {
-        if (!msg.readBy) msg.readBy = [];
-        if (!msg.readBy.includes(userId)) {
-          msg.readBy.push(userId);
-          readUpdated = true;
-        }
-      }
-    });
-    if (readUpdated) {
-      writeMessages(messages);
-    }
+    await messagesCollection.updateMany(
+      {
+        threadId,
+        receiverId: userId,
+        $or: [{ readBy: { $exists: false } }, { readBy: { $nin: [userId] } }]
+      },
+      { $addToSet: { readBy: userId } }
+    );
 
     const lastTimestamp = threadMessages.length
       ? threadMessages[threadMessages.length - 1].timestamp
@@ -130,7 +99,7 @@ router.get('/thread', (req, res) => {
 
     res.json({
       threadId,
-      messages: threadMessages,
+      messages: threadMessages.map(removeMongoId),
       lastTimestamp,
       hasNew: threadMessages.length > 0,
       pollAgainAfter: 2000
@@ -142,7 +111,7 @@ router.get('/thread', (req, res) => {
 });
 
 // Send a message or offer in a thread
-router.post('/thread/message', (req, res) => {
+router.post('/thread/message', async (req, res) => {
   try {
     const {
       itemId,
@@ -173,13 +142,12 @@ router.post('/thread/message', (req, res) => {
       }
     }
 
-    const items = readItems();
-    const item = items.find(i => i.id === itemId);
+    const itemsCollection = getCollection(collections.items);
+    const messagesCollection = getCollection(collections.messages);
+    const item = await itemsCollection.findOne({ id: itemId });
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
-
-    const messages = readMessages();
     const now = new Date().toISOString();
     const threadId = buildThreadId(itemId, senderId, receiverId);
 
@@ -200,14 +168,18 @@ router.post('/thread/message', (req, res) => {
       const numericOffer = Number(offerAmount);
       newMessage.offerAmount = numericOffer;
       newMessage.offerStatus = 'pending';
-
-      item.highestOffer = Math.max(item.highestOffer || 0, numericOffer);
-      item.highestOfferBuyer = senderId;
-      writeItems(items);
+      await itemsCollection.updateOne(
+        { id: itemId },
+        {
+          $set: {
+            highestOffer: Math.max(item.highestOffer || 0, numericOffer),
+            highestOfferBuyer: senderId
+          }
+        }
+      );
     }
 
-    messages.push(newMessage);
-    writeMessages(messages);
+    await messagesCollection.insertOne(newMessage);
     res.status(201).json(newMessage);
   } catch (error) {
     console.error('Error creating thread message:', error);
@@ -216,7 +188,7 @@ router.post('/thread/message', (req, res) => {
 });
 
 // Handle offer actions: accept, reject, counter
-router.post('/offers/:id/action', (req, res) => {
+router.post('/offers/:id/action', async (req, res) => {
   try {
     const { action, userId, userName, counterAmount } = req.body;
     const validActions = ['accept', 'reject', 'counter'];
@@ -224,13 +196,12 @@ router.post('/offers/:id/action', (req, res) => {
       return res.status(400).json({ error: 'Invalid action. Use accept, reject, or counter' });
     }
 
-    const messages = readMessages();
-    const messageIndex = messages.findIndex(msg => msg.id === req.params.id);
-    if (messageIndex === -1) {
+    const messagesCollection = getCollection(collections.messages);
+    const itemsCollection = getCollection(collections.items);
+    const offerMessage = await messagesCollection.findOne({ id: req.params.id });
+    if (!offerMessage) {
       return res.status(404).json({ error: 'Offer message not found' });
     }
-
-    const offerMessage = messages[messageIndex];
     if (offerMessage.type !== 'offer') {
       return res.status(400).json({ error: 'Only offer messages can be acted on' });
     }
@@ -267,18 +238,30 @@ router.post('/offers/:id/action', (req, res) => {
         timestamp: new Date().toISOString(),
         readBy: [userId]
       };
-      messages.push(counterMessage);
-
-      const items = readItems();
-      const item = items.find(i => i.id === offerMessage.itemId);
+      const item = await itemsCollection.findOne({ id: offerMessage.itemId });
       if (item) {
-        item.highestOffer = Math.max(item.highestOffer || 0, numericCounter);
-        item.highestOfferBuyer = userId;
-        writeItems(items);
+        await itemsCollection.updateOne(
+          { id: offerMessage.itemId },
+          {
+            $set: {
+              highestOffer: Math.max(item.highestOffer || 0, numericCounter),
+              highestOfferBuyer: userId
+            }
+          }
+        );
       }
 
-      writeMessages(messages);
-      return res.json({ success: true, action, originalOffer: offerMessage, counterOffer: counterMessage });
+      await messagesCollection.updateOne(
+        { id: offerMessage.id },
+        { $set: { offerStatus: offerMessage.offerStatus, respondedAt: offerMessage.respondedAt, respondedBy: offerMessage.respondedBy } }
+      );
+      await messagesCollection.insertOne(counterMessage);
+      return res.json({
+        success: true,
+        action,
+        originalOffer: removeMongoId(offerMessage),
+        counterOffer: counterMessage
+      });
     }
 
     offerMessage.offerStatus = action === 'accept' ? 'accepted' : 'rejected';
@@ -286,19 +269,27 @@ router.post('/offers/:id/action', (req, res) => {
     offerMessage.respondedBy = userId;
 
     if (action === 'accept') {
-      const items = readItems();
-      const item = items.find(i => i.id === offerMessage.itemId);
+      const item = await itemsCollection.findOne({ id: offerMessage.itemId });
       if (item) {
-        item.status = 'reserved';
-        item.acceptedOffer = offerMessage.offerAmount;
-        item.acceptedBuyerId = offerMessage.senderId;
-        item.acceptedAt = new Date().toISOString();
-        writeItems(items);
+        await itemsCollection.updateOne(
+          { id: offerMessage.itemId },
+          {
+            $set: {
+              status: 'reserved',
+              acceptedOffer: offerMessage.offerAmount,
+              acceptedBuyerId: offerMessage.senderId,
+              acceptedAt: new Date().toISOString()
+            }
+          }
+        );
       }
     }
 
-    writeMessages(messages);
-    res.json({ success: true, action, offer: offerMessage });
+    await messagesCollection.updateOne(
+      { id: offerMessage.id },
+      { $set: { offerStatus: offerMessage.offerStatus, respondedAt: offerMessage.respondedAt, respondedBy: offerMessage.respondedBy } }
+    );
+    res.json({ success: true, action, offer: removeMongoId(offerMessage) });
   } catch (error) {
     console.error('Error processing offer action:', error);
     res.status(500).json({ error: 'Failed to process offer action' });
@@ -307,9 +298,9 @@ router.post('/offers/:id/action', (req, res) => {
 
 
 // Get new messages after timestamp (for real-time updates)
-router.get('/item/:itemId/poll/:timestamp', (req, res) => {
+router.get('/item/:itemId/poll/:timestamp', async (req, res) => {
   try {
-    const messages = readMessages();
+    const messagesCollection = getCollection(collections.messages);
     const since = new Date(req.params.timestamp);
     const itemId = req.params.itemId;
     
@@ -318,14 +309,17 @@ router.get('/item/:itemId/poll/:timestamp', (req, res) => {
       return res.status(400).json({ error: 'Invalid timestamp format' });
     }
     
-    const newMessages = messages.filter(m => 
-      m.itemId === itemId && 
-      new Date(m.timestamp) > since
-    ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    const newMessages = await messagesCollection
+      .find({
+        itemId,
+        timestamp: { $gt: since.toISOString() }
+      })
+      .sort({ timestamp: 1 })
+      .toArray();
     
     // Add polling info to response
     res.json({
-      messages: newMessages,
+      messages: newMessages.map(removeMongoId),
       lastTimestamp: newMessages.length > 0 ? newMessages[newMessages.length - 1].timestamp : req.params.timestamp,
       hasNew: newMessages.length > 0,
       pollAgainAfter: 2000
@@ -337,17 +331,16 @@ router.get('/item/:itemId/poll/:timestamp', (req, res) => {
 });
 
 // Get unread message count for a user
-router.get('/unread/:userId', (req, res) => {
+router.get('/unread/:userId', async (req, res) => {
   try {
-    const messages = readMessages();
+    const messagesCollection = getCollection(collections.messages);
     const userId = req.params.userId;
     
     // Get all messages where user is not the sender and not system messages
-    const unreadMessages = messages.filter(m => 
-      m.senderId !== userId && 
-      m.senderId !== 'system' &&
-      !m.readBy?.includes(userId)
-    );
+    const unreadMessages = await messagesCollection.find({
+      senderId: { $nin: [userId, 'system'] },
+      $or: [{ readBy: { $exists: false } }, { readBy: { $nin: [userId] } }]
+    }).toArray();
     
     // Group by item
     const unreadByItem = {};
@@ -369,21 +362,14 @@ router.get('/unread/:userId', (req, res) => {
 });
 
 // Mark messages as read
-router.post('/read', (req, res) => {
+router.post('/read', async (req, res) => {
   try {
-    const { userId, itemId, messageIds } = req.body;
-    const messages = readMessages();
-    
-    messages.forEach(message => {
-      if (message.itemId === itemId && message.senderId !== userId) {
-        if (!message.readBy) message.readBy = [];
-        if (!message.readBy.includes(userId)) {
-          message.readBy.push(userId);
-        }
-      }
-    });
-    
-    writeMessages(messages);
+    const { userId, itemId } = req.body;
+    const messagesCollection = getCollection(collections.messages);
+    await messagesCollection.updateMany(
+      { itemId, senderId: { $ne: userId } },
+      { $addToSet: { readBy: userId } }
+    );
     res.json({ success: true });
   } catch (error) {
     console.error('Error marking messages as read:', error);
@@ -392,11 +378,10 @@ router.post('/read', (req, res) => {
 });
 
 // Delete a message
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
-    const messages = readMessages();
-    const filtered = messages.filter(m => m.id !== req.params.id);
-    writeMessages(filtered);
+    const messagesCollection = getCollection(collections.messages);
+    await messagesCollection.deleteOne({ id: req.params.id });
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting message:', error);

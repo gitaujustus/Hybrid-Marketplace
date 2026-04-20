@@ -1,29 +1,8 @@
 import express from 'express';
-import { readFileSync, writeFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { collections, getCollection, removeMongoId } from '../src/db.js';
 
 const router = express.Router();
-const itemsPath = join(__dirname, '../data/items.json');
-const messagesPath = join(__dirname, '../data/messages.json');
-
-const readItems = () => {
-  const data = readFileSync(itemsPath);
-  return JSON.parse(data);
-};
-
-const writeItems = (items) => {
-  writeFileSync(itemsPath, JSON.stringify(items, null, 2));
-};
-
-const readMessages = () => {
-  const data = readFileSync(messagesPath);
-  return JSON.parse(data);
-};
 
 const normalizeMpesaNumber = (rawPhone) => {
   const digits = String(rawPhone || '').replace(/\D/g, '');
@@ -37,12 +16,14 @@ const normalizeMpesaNumber = (rawPhone) => {
 };
 
 // Get all items for a specific seller (used for "My Listings")
-router.get('/user/:sellerId', (req, res) => {
+router.get('/user/:sellerId', async (req, res) => {
   try {
-    const items = readItems()
-      .filter(item => item.sellerId === req.params.sellerId)
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    res.json(items);
+    const itemsCollection = getCollection(collections.items);
+    const items = await itemsCollection
+      .find({ sellerId: req.params.sellerId })
+      .sort({ createdAt: -1 })
+      .toArray();
+    res.json(items.map(removeMongoId));
   } catch (error) {
     console.error('Error fetching user items:', error);
     res.status(500).json({ error: 'Failed to fetch user items' });
@@ -50,25 +31,22 @@ router.get('/user/:sellerId', (req, res) => {
 });
 
 // Get all active items (with search)
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    let items = readItems();
-    // Only show active items
-    items = items.filter(item => item.status === 'active');
-    
+    const itemsCollection = getCollection(collections.items);
     const { search } = req.query;
-    if (search && search.trim()) {
-      const searchTerm = search.toLowerCase().trim();
-      items = items.filter(item => 
-        item.name.toLowerCase().includes(searchTerm) ||
-        item.description.toLowerCase().includes(searchTerm)
-      );
+    const query = { status: 'active' };
+
+    if (search?.trim()) {
+      const safeSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query.$or = [
+        { name: { $regex: safeSearch, $options: 'i' } },
+        { description: { $regex: safeSearch, $options: 'i' } }
+      ];
     }
-    
-    // Sort by newest first
-    items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    res.json(items);
+
+    const items = await itemsCollection.find(query).sort({ createdAt: -1 }).toArray();
+    res.json(items.map(removeMongoId));
   } catch (error) {
     console.error('Error fetching items:', error);
     res.status(500).json({ error: 'Failed to fetch items' });
@@ -76,14 +54,14 @@ router.get('/', (req, res) => {
 });
 
 // Get single item
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
-    const items = readItems();
-    const item = items.find(i => i.id === req.params.id);
+    const itemsCollection = getCollection(collections.items);
+    const item = await itemsCollection.findOne({ id: req.params.id });
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
-    res.json(item);
+    res.json(removeMongoId(item));
   } catch (error) {
     console.error('Error fetching item:', error);
     res.status(500).json({ error: 'Failed to fetch item' });
@@ -91,9 +69,8 @@ router.get('/:id', (req, res) => {
 });
 
 // Create new item listing
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const items = readItems();
     const { name, description, price, image, sellerId, sellerName } = req.body;
     
     if (!name || !price || !sellerId) {
@@ -114,8 +91,8 @@ router.post('/', (req, res) => {
       createdAt: new Date().toISOString()
     };
     
-    items.push(newItem);
-    writeItems(items);
+    const itemsCollection = getCollection(collections.items);
+    await itemsCollection.insertOne(newItem);
     res.status(201).json(newItem);
   } catch (error) {
     console.error('Error creating item:', error);
@@ -124,17 +101,20 @@ router.post('/', (req, res) => {
 });
 
 // Update item
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
-    const items = readItems();
-    const index = items.findIndex(i => i.id === req.params.id);
-    if (index === -1) {
+    const itemsCollection = getCollection(collections.items);
+    const existing = await itemsCollection.findOne({ id: req.params.id });
+    if (!existing) {
       return res.status(404).json({ error: 'Item not found' });
     }
     
-    items[index] = { ...items[index], ...req.body };
-    writeItems(items);
-    res.json(items[index]);
+    const nextItem = { ...existing, ...req.body };
+    await itemsCollection.updateOne(
+      { id: req.params.id },
+      { $set: nextItem }
+    );
+    res.json(removeMongoId(nextItem));
   } catch (error) {
     console.error('Error updating item:', error);
     res.status(500).json({ error: 'Failed to update item' });
@@ -142,11 +122,10 @@ router.put('/:id', (req, res) => {
 });
 
 // Delete item (remove from marketplace)
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
-    const items = readItems();
-    const filtered = items.filter(i => i.id !== req.params.id);
-    writeItems(filtered);
+    const itemsCollection = getCollection(collections.items);
+    await itemsCollection.deleteOne({ id: req.params.id });
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting item:', error);
@@ -155,7 +134,7 @@ router.delete('/:id', (req, res) => {
 });
 
 // Checkout - buyer confirms payment
-router.post('/:id/checkout', (req, res) => {
+router.post('/:id/checkout', async (req, res) => {
   try {
     const { buyerId, mpesaNumber, amount } = req.body || {};
     if (!buyerId) {
@@ -167,13 +146,11 @@ router.post('/:id/checkout', (req, res) => {
       return res.status(400).json({ error: 'Valid M-Pesa number is required' });
     }
 
-    const items = readItems();
-    const index = items.findIndex(i => i.id === req.params.id);
-    if (index === -1) {
+    const itemsCollection = getCollection(collections.items);
+    const item = await itemsCollection.findOne({ id: req.params.id });
+    if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
-
-    const item = items[index];
     if (item.sellerId === buyerId) {
       return res.status(400).json({ error: 'Seller cannot pay for own listing' });
     }
@@ -189,17 +166,20 @@ router.post('/:id/checkout', (req, res) => {
       });
     }
 
-    items[index].paymentStatus = 'paid';
-    items[index].paymentConfirmedBy = buyerId;
-    items[index].paymentConfirmedAt = new Date().toISOString();
-    items[index].paymentAmount = paidAmount;
-    items[index].paymentMpesaNumber = normalizedMpesa;
-    writeItems(items);
+    const update = {
+      paymentStatus: 'paid',
+      paymentConfirmedBy: buyerId,
+      paymentConfirmedAt: new Date().toISOString(),
+      paymentAmount: paidAmount,
+      paymentMpesaNumber: normalizedMpesa
+    };
+    await itemsCollection.updateOne({ id: req.params.id }, { $set: update });
+    const updatedItem = { ...item, ...update };
     
     res.json({ 
       success: true, 
       message: 'Payment confirmed successfully',
-      item: items[index]
+      item: removeMongoId(updatedItem)
     });
   } catch (error) {
     console.error('Error processing checkout:', error);
@@ -208,23 +188,19 @@ router.post('/:id/checkout', (req, res) => {
 });
 
 // Seller confirms payment and removes item
-router.post('/:id/confirm-sale', (req, res) => {
+router.post('/:id/confirm-sale', async (req, res) => {
   try {
-    const items = readItems();
-    const index = items.findIndex(i => i.id === req.params.id);
-    if (index === -1) {
+    const itemsCollection = getCollection(collections.items);
+    const item = await itemsCollection.findOne({ id: req.params.id });
+    if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
-    
-    // Remove item from marketplace
-    const soldItem = items[index];
-    items.splice(index, 1);
-    writeItems(items);
+    await itemsCollection.deleteOne({ id: req.params.id });
     
     res.json({ 
       success: true, 
       message: 'Item sold and removed from marketplace',
-      item: soldItem
+      item: removeMongoId(item)
     });
   } catch (error) {
     console.error('Error confirming sale:', error);
